@@ -1,11 +1,14 @@
 ﻿using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SNSEvents;
-using Amazon.SimpleEmail;
 using Amazon.SimpleEmail.Model;
+using DivinitySoftworks.AWS.Core.Net.Mail;
+using DivinitySoftworks.AWS.Core.Net.Storage;
 using DivinitySoftworks.AWS.Core.Web.Functions;
+using DivinitySoftworks.Core.Net.Mail;
 using DivinitySoftworks.Core.Web.Security;
 using DivinitySoftworks.Functions.Notification.Repositories;
+using OneOf;
 using System.Text.Json;
 
 namespace DS.Functions.Notification;
@@ -14,49 +17,41 @@ public sealed class Notification([FromServices] IAuthorizeService authorizeServi
     const string RootBase = "/notification";
     const string RootResourceName = "DSNotification";
 
+    /// <summary>
+    /// Converts a JSON string into either an <see cref="EmailMessage"/> or an <see cref="EmailTemplateMessage"/> object.
+    /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>
+    /// An <see cref="OneOf{EmailMessage, EmailTemplateMessage}"/> instance containing either an <see cref="EmailMessage"/> 
+    /// or an <see cref="EmailTemplateMessage"/> depending on the presence of the "Template" property in the JSON.
+    /// </returns>
+    /// <exception cref="JsonException">Thrown if the JSON is invalid or cannot be deserialized into the expected types.</exception>
+    private static OneOf<EmailMessage, EmailTemplateMessage> ConvertJsonToObject(string json) {
+        using var document = JsonDocument.Parse(json);
+        if (document.RootElement.TryGetProperty("Template", out _))
+            return JsonSerializer.Deserialize<EmailTemplateMessage>(json)!;
+        return JsonSerializer.Deserialize<EmailMessage>(json)!;
+    }
+
     [LambdaFunction(ResourceName = $"{RootResourceName}{nameof(HandleEmailAsync)}")]
     public async Task HandleEmailAsync(SNSEvent snsEvent, ILambdaContext context,
-        [FromServices] IAmazonSimpleEmailService simpleEmailService,
-        [FromServices] INotificationBlackListRepository mortgageInterestRepository) {
+        [FromServices] IStorageService storageService,
+        [FromServices] IEmailService emailService,
+        [FromServices] INotificationBlackListRepository notificationBlackListRepository) {
         try {
-            foreach (var record in snsEvent.Records) {
+            foreach (SNSEvent.SNSRecord? record in snsEvent.Records) {
                 try {
-                    var message = JsonSerializer.Deserialize<EmailMessage>(record.Sns.Message);
 
-                    var sendRequest = new SendEmailRequest {
-                        Source = senderAddress,
-                        Destination = new Destination {
-                            ToAddresses =
-                        new List<string> { message.Recipient }
-                        },
-                        Message = new Message {
-                            Subject = new Content(message.Subject),
-                            Body = new Body {
-                                Html = new Content {
-                                    Charset = "UTF-8",
-                                    Data = message.Body
-                                },
-                                Text = new Content {
-                                    Charset = "UTF-8",
-                                    Data = message.Body
-                                }
-                            }
-                        },
-                        // If you are not using a configuration set, comment
-                        // or remove the following line 
-                        //ConfigurationSetName = configSet
-                    };
-                    try {
-                        context.Logger.LogWarning("Sending email using Amazon SES...");
-                        var response = await simpleEmailService.SendEmailAsync(sendRequest);
-                        context.Logger.LogWarning("The email was sent successfully.");
-                    }
-                    catch (Exception ex) {
+                    context.Logger.LogLine($"Received message: {record.Sns.Message}");
 
-                        context.Logger.LogError("The email was not sent.");
-                        context.Logger.LogError(ex.Message);
+                    OneOf<EmailMessage, EmailTemplateMessage> result = ConvertJsonToObject(record.Sns.Message);
 
-                    }
+                    SendEmailResponse emailResultTask = await result.Match(
+                        EmailMessage => emailService.SendAsync(result.AsT0, context),
+                        EmailTemplateMessage => emailService.SendAsync(result.AsT1
+                        , storageService.LoadFileAsync
+                        , context)
+                    );
                 }
                 catch (Exception ex) {
                     context.Logger.LogLine($"Error sending email: {ex.Message}");
@@ -67,12 +62,4 @@ public sealed class Notification([FromServices] IAuthorizeService authorizeServi
             context.Logger.LogError(exception.Message);
         }
     }
-
-    static readonly string senderAddress = "mortgage@divinity-softworks.com";
-}
-
-public class EmailMessage {
-    public string Subject { get; set; }
-    public string Body { get; set; }
-    public string Recipient { get; set; }
 }

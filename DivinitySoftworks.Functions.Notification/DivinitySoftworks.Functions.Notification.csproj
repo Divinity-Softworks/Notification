@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -15,10 +15,13 @@
     <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="2.1.0" />
-    <PackageReference Include="AWSSDK.SimpleEmail" Version="3.7.402.12" />
-    <PackageReference Include="DivinitySoftworks.AWS.Core.Data.DynamoDB" Version="0.1.38" />
-    <PackageReference Include="DivinitySoftworks.AWS.Core.Web.Functions" Version="0.1.39" />
+    <PackageReference Include="DivinitySoftworks.AWS.Core.Data.DynamoDB" Version="0.1.43" />
+    <PackageReference Include="DivinitySoftworks.AWS.Core.Net" Version="0.1.48" />
+    <PackageReference Include="DivinitySoftworks.AWS.Core.Net.Storage" Version="0.1.49" />
+    <PackageReference Include="DivinitySoftworks.AWS.Core.Web.Functions" Version="0.1.41" />
     <PackageReference Include="DivinitySoftworks.Core" Version="0.1.10" />
+    <PackageReference Include="DivinitySoftworks.Core.Net" Version="0.1.24" />
+    <PackageReference Include="OneOf" Version="3.0.271" />
   </ItemGroup>
   <!-- 
     The FrameworkReference is used to reduce the deployment bundle size by not having to include 

@@ -1,10 +1,9 @@
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
-using Amazon.SimpleEmail;
+using DivinitySoftworks.AWS.Core.Data.DynamoDB.Settings;
 using DivinitySoftworks.Core.Web.Security;
 using DivinitySoftworks.Functions.Notification.Repositories;
-using DivinitySoftworks.Functions.Notification.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -37,7 +36,8 @@ public class Startup {
         else
             services.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(RegionEndpoint.EUWest3));
 
-        services.AddSingleton<IAmazonSimpleEmailService>(new AmazonSimpleEmailServiceClient(RegionEndpoint.EUWest3));
+        services.AddSimpleEmailService(configuration);
+        services.AddS3Bucket(configuration);
 
         services.AddSingleton<INotificationBlackListRepository, NotificationBlackListRepository>();
 
