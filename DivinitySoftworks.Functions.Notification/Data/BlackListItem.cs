@@ -16,7 +16,7 @@ public sealed record BlackListItem {
     /// <summary>
     /// Gets or sets the email address of the blacklisted item.
     /// </summary>
-    [JsonPropertyName("Email")]
+    [JsonPropertyName("PK")]
     public string Email { get; init; } = default!;
 
     /// <summary>
