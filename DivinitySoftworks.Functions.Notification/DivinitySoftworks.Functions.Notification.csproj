@@ -18,7 +18,7 @@
     <PackageReference Include="DivinitySoftworks.AWS.Core.Data.DynamoDB" Version="0.1.43" />
     <PackageReference Include="DivinitySoftworks.AWS.Core.Net" Version="0.1.50" />
     <PackageReference Include="DivinitySoftworks.AWS.Core.Net.Storage" Version="0.1.49" />
-    <PackageReference Include="DivinitySoftworks.AWS.Core.Web.Functions" Version="0.1.52" />
+    <PackageReference Include="DivinitySoftworks.AWS.Core.Web.Functions" Version="0.1.55" />
     <PackageReference Include="DivinitySoftworks.Core" Version="0.1.10" />
     <PackageReference Include="DivinitySoftworks.Core.Net" Version="0.1.24" />
     <PackageReference Include="OneOf" Version="3.0.271" />
